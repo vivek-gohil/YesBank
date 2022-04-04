@@ -1,0 +1,403 @@
+CREATE DATABASE salesdb;
+
+USE salesdb;
+DROP TABLE client_master;
+
+CREATE TABLE client_master (
+	client_no VARCHAR(6),
+	name VARCHAR(20) NOT NULL,
+	address1 VARCHAR(30),
+	address2 VARCHAR(30),
+	city VARCHAR(15),
+	state VARCHAR(15),
+	pincode INT,
+	balance_due FLOAT,
+	CONSTRAINT client_no_ck CHECK(client_no LIKE 'C%'),
+	CONSTRAINT client_no_pk PRIMARY KEY(client_no)
+);
+
+INSERT INTO client_master(client_no,name,city,pincode,state,balance_due) 
+VALUES('C00001','Ivan Bayross','Bombay',400054,'Maharashtra',15000); 
+
+
+SELECT * FROM client_master;
+
+--------------------------------------------------
+
+create table product_master
+(
+	product_no varchar(6) constraint primarykeyProduct primary key, constraint checkProductNo check (product_no like 'P%'),
+	description varchar(50) not null,
+	profit_percent numeric(3,2)not null,
+	unit_measure varchar(10)not null,
+	qty_on_hand numeric(8)not null,
+	recorder_lvl numeric(8)not null,
+	sell_price numeric (8,2)not null constraint sellPrice check (sell_price>0),
+	cost_price numeric (8,2)not null constraint costPrice check (cost_price>0)
+)
+
+-------------------------------------------
+
+create table salesman_master
+(
+	salesman_no varchar(6) constraint primarykeySalesman primary key, constraint checkSalesmanNo check (salesman_no like 'S%'),
+	salesman_name varchar(20) not null,
+	Address1 varchar(30) not null,
+	Address2 varchar(30),
+	city varchar(20),
+	pincode varchar(6),
+	state varchar(20),
+	sal_amt numeric (8,2) not null constraint salAmount check (sal_amt >0),
+	tgt_to_get numeric (6,2)not null constraint targetAmount check (tgt_to_get >0),
+	ytd_sales numeric (6,2) not null,
+	remarks varchar(60)
+)
+
+-----------------------------------------------
+
+create table sales_order
+(
+	s_order_no varchar(6) constraint primarykeyOrder primary key, constraint checkOrderNo check (s_order_no like 'O%'),
+	s_order_date datetime,
+	client_no varchar(6)constraint foreignKeyClient foreign key references Client_master(client_no),
+	dely_Addr varchar(25),
+	salesman_no varchar(6) constraint foreignKeySalesman foreign key references salesman_master(salesman_no),
+	dely_type char(1) constraint checkdelyType check(dely_type in ('P','F'))constraint defalutdelyType default 'F',
+	bill_Yn char(1) constraint checkBillYN check (bill_Yn in ('Y','N')),
+	dely_date datetime,
+	order_status varchar(10)
+)
+
+------------------------------------------------
+create table sales_order_details
+(
+	s_order_no varchar(6) constraint foreignkeySalesOrder foreign key references sales_order(s_order_no),
+	product_no varchar(6)constraint foreignkeyProduct foreign key references product_master(product_no),
+	qty_ordered numeric (8),
+	qty_disp numeric(8),
+	product_rate numeric(10,2),
+	constraint pmk primary key (s_order_no,product_no)
+)
+
+------------------------------------------------------
+
+create table Challan_header
+(
+	challan_no varchar(6) constraint primarykeyChallanNo primary key, constraint checkChallanNo check(challan_no like 'CH%'),
+	s_order_no varchar(6) constraint foreignkeySalesOrderChallan foreign key references sales_order(s_order_no),
+	challan_date datetime not null,
+	billed_yn char(1) constraint defaultBilled default 'N', constraint checkBilled check(billed_yn in ('Y','N'))
+)
+
+------------------------------------------------------
+create table Challan_details
+(
+	challan_no varchar(6) constraint foreignkeyChallanHead foreign key references Challan_header(challan_no),
+	product_no varchar(6)constraint foreignkeyProductChallan foreign key references product_master(product_no),
+	qty_disp numeric(4,2) not null
+)
+
+-------------------------------------------------------
+insert into client_master(client_no,name,city,pincode,state,balance_due)values('C00002','Vandana Sitwal','Madras',780001,'Tamil Nadu',0)
+insert into client_master(client_no,name,city,pincode,state,balance_due)values('C00003','Pramada Jaguste','Bombay',400057,'Maharashtra',5000)
+insert into client_master(client_no,name,city,pincode,state,balance_due)values('C00004','Sachin Chitale','Bombay',400056,'Maharashtra',0)
+insert into client_master(client_no,name,city,pincode,balance_due) values('C00005','Ravi Sharma','Delhi',100001,2000)
+insert into client_master(client_no,name,city,pincode,state,balance_due)values('C00006','Rukmini','Bombay',400050,'Maharashtra',0)
+
+select * from client_master
+---------------------------------------------
+insert into product_master values('P00001','1.44 Floppies',5,'Piece',100,20,525,500)
+insert into product_master values('P03453','Monitors',6,'Piece',10,3,12000,11280)
+insert into product_master values('P06734','Mouse',5,'Piece',20,50,1050,1000)
+insert into product_master values('P07865','1.22 Floppies',5,'Piece',100,20,525,500)
+insert into product_master values('P07868','Keyboards',2,'Piece',10,3,3150,3050)
+insert into product_master values('P07885','CD Drive',2.5,'Piece',10,3,5250,5100)
+insert into product_master values('P07965','540 HDD',4,'Piece',10,3,8400,8000)
+insert into product_master values('P07975','1.44 Drive',5,'Piece',10,3,1050,1000)
+insert into product_master values('P08865','1.22 Drive',5,'Piece',2,3,1050,1000)
+
+select * from product_master
+
+---------------------------------------------
+
+insert into salesman_master values('S00001','Kiran','A/14','Worli','Bombay',400002,'MAH',3000,100,50,'Good')
+insert into salesman_master values('S00002','Manish','65','Nariman','Bombay',400001,'MAH',3000,200,100,'Good')
+insert into salesman_master values('S00003','Ravi','P-7','Bandra','Bombay',400032,'MAH',3000,200,100,'Good')
+insert into salesman_master values('S00004','Ashish','A/5','Juhu','Bombay',400044,'MAH',3500,200,150,'Good')
+
+select * from salesman_master
+
+---------------------------------------------
+insert into sales_order(s_order_no,s_order_date,client_no,dely_type,bill_Yn,salesman_no,dely_date,order_status)
+values('O19001','01/12/1996','C00001','F','N','S00001','01/20/1996','IP')
+
+insert into sales_order(s_order_no,s_order_date,client_no,dely_type,bill_Yn,salesman_no,dely_date,order_status)
+values('O19002','01/25/1996','C00002','P','N','S00002','01/27/1996','C')
+
+insert into sales_order(s_order_no,s_order_date,client_no,dely_type,bill_Yn,salesman_no,dely_date,order_status)
+values('O46865','02/18/1996','C00003','F','Y','S00003','02/20/1996','F')
+
+insert into sales_order(s_order_no,s_order_date,client_no,dely_type,bill_Yn,salesman_no,dely_date,order_status)
+values('O19003','04/03/1996','C00001','F','Y','S00001','04/07/1996','F')
+
+insert into sales_order(s_order_no,s_order_date,client_no,dely_type,bill_Yn,salesman_no,dely_date,order_status)
+values('O46866','05/20/1996','C00004','P','N','S00002','05/22/1996','C')
+
+insert into sales_order(s_order_no,s_order_date,client_no,dely_type,bill_Yn,salesman_no,dely_date,order_status)
+values('O10008','05/24/1996','C00005','F','N','S00004','05/26/1996','IP')
+
+select * from sales_order
+
+---------------------------------------
+insert into sales_order_details values('O19001','P00001',4,4,525)
+insert into sales_order_details values('O19001','P07965',2,1,8400)
+insert into sales_order_details values('O19001','P07885',2,1,5250)
+insert into sales_order_details values('O19002','P00001',10,0,525)
+insert into sales_order_details values('O46865','P07868',3,3,3150)
+insert into sales_order_details values('O46865','P07885',3,1,5250)
+insert into sales_order_details values('O46865','P00001',10,10,525)
+insert into sales_order_details values('O46865','P03453',4,4,1050)
+insert into sales_order_details values('O19003','P03453',2,2,1050)
+insert into sales_order_details values('O19003','P06734',1,1,12000)
+insert into sales_order_details values('O46866','P07965',1,0,8400)
+insert into sales_order_details values('O46866','P07975',1,0,1050)
+insert into sales_order_details values('O19008','P00001',10,5,525)
+insert into sales_order_details values('O19008','P07975',5,3,1050)
+
+SELECT * FROM sales_order_details;
+
+---------------------------------------------------
+insert into challan_header values('CH9001','O19001','12/12/1995','Y')
+insert into challan_header values('CH6865','O46865','11/12/1995','Y')
+insert into challan_header values('CH3965','O10008','10/12/1995','Y')
+
+select * from challan_header
+
+----------------------------------------------------
+insert into challan_details values('CH9001','P00001',4)
+insert into challan_details values('CH9001','P07965',1)
+insert into challan_details values('CH9001','P07885',1)
+insert into challan_details values('CH6865','P07868',3)
+insert into challan_details values('CH6865','P03453',4)
+insert into challan_details values('CH6865','P00001',10)
+insert into challan_details values('CH3965','P00001',5)
+insert into challan_details values('CH3965','P07975',2)
+
+select * from challan_details
+---------------------------------------
+-- 1)Find out the names of all the clients.
+SELECT name FROM client_master
+
+-- 2)	Print the entire client_master table.
+SELECT * FROM client_master
+
+-- 3)	Retrieve the list of names and the cities of all the clients
+SELECT name , city FROM client_master
+
+-- 4)	List the various products available from the product_master table.
+SELECT description as 'products' FROM product_master;
+
+-- 5)	Find the names of all clients having ‘a’ as the second letter in their table.
+SELECT name FROM client_master WHERE name like '_a%';
+
+-- 6)	Find the names of all clients who stay in a city whose second letter is ‘a’
+SELECT name , city FROM client_master WHERE city like '_a%';
+
+-- 7)	Find out the clients who stay in a city ‘Bombay’ or city ‘Delhi’ or city ‘Madras’.
+SELECT * FROM client_master WHERE city = 'Bombay' OR city = 'Delhi' OR city = 'Madras';
+SELECT * FROM client_master WHERE city IN ('Bombay','Delhi' ,'Madras');
+
+-- 8)	List all the clients who are located in Bombay.
+SELECT * FROM client_master WHERE city = 'Bombay';
+
+-- 9)	Print the list of clients whose bal_due are greater than value 10000
+SELECT * FROM client_master WHERE balance_due > 10000
+
+-- 10)	Print the information from sales_order table of orders placed in the month of January.
+SELECT * FROM sales_order;
+SELECT * FROM sales_order WHERE MONTH(s_order_date) = 1;
+SELECT * FROM sales_order WHERE s_order_date BETWEEN '1996-01-01' AND '1996-01-31';
+SELECT * FROM sales_order WHERE DATENAME(MONTH,s_order_date) = 'January'
+
+-- 11)	Display the order information for client_no ‘C00001’ and ‘C00002’
+SELECT * FROM sales_order WHERE client_no IN ('C00001' , 'C00002')
+
+-- 12)	Find the products with description as ‘1.44 Drive’ and ‘1.22 Drive’
+SELECT * FROM product_master WHERE description IN ('1.44 Drive' , '1.22 Drive');
+
+-- 13)	Find the products whose selling price is greater than 2000 and less than or equal to 5000
+SELECT * FROM product_master WHERE sell_price > 2000 AND sell_price <= 5000
+SELECT * FROM product_master WHERE sell_price BETWEEN 2000 AND 5000;
+
+-- 14)	Find the products whose selling price is more than 1500 and also find the new selling price as original selling price * 15
+SELECT sell_price , sell_price + (sell_price * 0.15) FROM product_master WHERE sell_price > 1500
+
+-- 15)	Rename the new column in the above query as new_price
+SELECT sell_price , sell_price + (sell_price * 0.15) AS 'new_price' FROM product_master WHERE sell_price > 1500
+
+-- 16)	Find the products whose cost price is less than 1500
+SELECT * FROM product_master WHERE cost_price < 1500
+
+-- 17)	List the products in sorted order of their description.
+SELECT * FROM product_master ORDER BY description;
+
+-- 18)	Calculate the square root the price of each product.
+SELECT product_no,description, sell_price , SQRT(sell_price) 'square_root_of_sell_price' FROM product_master ORDER BY description;
+
+-- 19)	Divide the cost of product ‘540 HDD’ by difference between its price and 100
+SELECT * FROM product_master WHERE description = '540 HDD' ORDER BY description;
+SELECT cost_price/(sell_price - 100) AS 'new_price/sell_price - 100' FROM product_master WHERE description = '540 HDD' ORDER BY description;
+
+-- 20)	List the names, city and state of clients not in the state of Maharashtra
+SELECT * FROM client_master;
+SELECT name , city , state FROM client_master WHERE state != 'Maharashtra';
+SELECT name , city , state FROM client_master WHERE state NOT IN ('Maharashtra');
+
+-- 21)	List the product_no, description, sell_price of products whose description begin with letter ‘M’
+SELECT * FROM product_master WHERE description like 'M%' 
+
+-- 22)	List all the orders that were canceled in the month of May.
+SELECT * FROM sales_order;
+SELECT * FROM sales_order WHERE order_status = 'C';
+SELECT * FROM sales_order WHERE order_status = 'C' AND DATENAME(MONTH , s_order_date) = 'May';
+
+-- 2.	Set Functions and Concatenation 
+-- 23)	Count the total number of orders.
+SELECT * FROM sales_order;
+SELECT COUNT(s_order_no) AS 'order_count'FROM sales_order;
+
+-- 24)	Calculate the average price of all the products.
+SELECT * FROM product_master;
+SELECT AVG(sell_price) AS 'average sell price' FROM product_master;
+
+-- 25)	Calculate the minimum price of products.
+SELECT MIN(sell_price) AS 'min sell price' FROM product_master;
+
+-- 26)	Determine the maximum and minimum product prices. Rename the title as max_price and min_price respectively.
+SELECT MIN(sell_price) AS 'min sell price' , MAX(sell_price) AS 'max sell price'  FROM product_master;
+
+
+-- 27)	Count the number of products having price greater than or equal to 1500.
+SELECT COUNT(sell_price) AS 'count sell price >= 1500' FROM product_master where sell_price >= 1500;
+
+-- 28)	Find all the products whose qty_on_hand is less than reorder level.
+SELECT * FROM product_master WHERE qty_on_hand < recorder_lvl ORDER BY description;
+
+-- 29)	Print the information of client_master, product_master, sales_order table in the following formate for all the records 
+-- {cust_name} has placed order {order_no} on {s_order_date}.
+
+SELECT * FROM client_master; -- pk = client_no
+SELECT name FROM client_master;
+
+SELECT * FROM product_master;  -- pk = product_no
+
+SELECT * FROM sales_order; -- pk = s_order_no , fk = client_no
+SELECT s_order_no , s_order_date FROM sales_order; 
+
+SELECT 
+	*
+FROM	
+	client_master
+JOIN
+	sales_order
+ON
+	client_master.client_no = sales_order.client_no
+
+SELECT 
+	c.name ,s.s_order_no , s.s_order_date
+FROM	
+	client_master c
+JOIN
+	sales_order s
+ON
+	c.client_no = s.client_no
+
+
+SELECT 
+	CONCAT( c.name   ,' has placed order ' ,  s.s_order_no , ' on ', s.s_order_date ) AS 'customer order details'
+FROM	
+	client_master c
+JOIN
+	sales_order s
+ON
+	c.client_no = s.client_no
+
+-- 3.	Having and Group by:
+-- 30)	Print the description and total qty sold for each product.
+SELECT * FROM product_master;
+SELECT description FROM product_master;
+
+SELECT * FROM sales_order_details;
+SELECT qty_ordered FROM sales_order_details;
+
+-- Step 1 -- Join two tables product_master and sales_order_details
+SELECT * FROM product_master p JOIN sales_order_details s ON p.product_no = s.product_no;
+SELECT p.description , s.qty_ordered FROM product_master p JOIN sales_order_details s ON p.product_no = s.product_no
+
+-- Step 2 -- order by the data to understand
+SELECT p.description , s.qty_ordered FROM product_master p JOIN sales_order_details s ON p.product_no = s.product_no ORDER BY p.description
+
+-- Step 3 -- group by to get the sum of quantity ordered
+SELECT p.description ,SUM(s.qty_ordered) AS 'sum of quantity ordered' FROM product_master p JOIN sales_order_details s 
+ON p.product_no = s.product_no 
+GROUP BY p.description
+ORDER BY p.description
+
+-- 31)	Find the value of each product sold.
+
+SELECT * FROM product_master;
+SELECT product_no FROM product_master;
+
+SELECT * FROM sales_order_details;
+SELECT product_no ,SUM(qty_ordered * product_rate) AS 'sum of each product sold' FROM sales_order_details GROUP BY product_no;
+
+-- 32)	Calculate the average qty sold for each client that has a maximum order value of 15000.00
+
+SELECT * FROM client_master;
+SELECT * FROM product_master;
+SELECT * FROM sales_order;
+SELECT * FROM sales_order_details;
+
+SELECT name, AVG(qty_ordered) FROM client_master , sales_order_details
+GROUP BY name
+HAVING MAX(product_rate * qty_ordered) >= 15000
+
+-- 33)	Find out the total sales amount receivable for the month of jan. it will be the sum total of all the billed orders for the month.
+SELECT * FROM sales_order;
+SELECT * FROM sales_order_details;
+
+SELECT * FROM sales_order WHERE DATENAME(MONTH , s_order_date) = 'January';
+SELECT * FROM sales_order_details WHERE s_order_no IN ('O19001' , 'O19002')
+SELECT s_order_no , SUM(qty_ordered * product_rate) FROM sales_order_details WHERE s_order_no IN ('O19001' , 'O19002') GROUP BY s_order_no
+
+SELECT s_order_no ,SUM(qty_ordered * product_rate) AS 'total_receivable' 
+FROM sales_order_details WHERE s_order_no IN (SELECT s_order_no FROM sales_order WHERE DATENAME(MONTH , s_order_date) = 'January')
+GROUP BY s_order_no
+
+
+-- 34)	Print the information of product_master, order_detail table in the following format for all the records
+-- {Description} worth Rs. {Total sales for the product} was sold.
+SELECT * FROM product_master;
+SELECT * FROM sales_order_details;
+
+SELECT * FROM product_master p JOIN sales_order_details s ON p.product_no = s.product_no;
+
+SELECT description ,SUM(qty_ordered * product_rate) FROM product_master p JOIN sales_order_details s ON p.product_no = s.product_no GROUP BY description;
+
+SELECT CONCAT( description ,' worth Rs. ' ,SUM(qty_ordered * product_rate) ) AS 'REPORT' 
+FROM product_master p JOIN sales_order_details s ON p.product_no = s.product_no GROUP BY description;
+
+-- 35)	Print the information of product_master, order_detail table in the following format for all the records
+-- {Description} worth Rs. {Total sales for the product} was produced in the month of {s_order_date} in month formate.
+
+SELECT * FROM product_master;
+SELECT * FROM sales_order_details;
+SELECT * FROM sales_order;
+
+SELECT * FROM product_master p JOIN sales_order_details sod ON p.product_no = sod.product_no JOIN sales_order so ON sod.s_order_no = so.s_order_no
+
+SELECT CONCAT( description , ' worth Rs. ' , SUM(qty_ordered * product_rate) ,' was produced in the month of ',DATENAME(MONTH, s_order_date))
+FROM product_master p JOIN sales_order_details sod ON p.product_no = sod.product_no JOIN sales_order so ON sod.s_order_no = so.s_order_no
+GROUP BY description , s_order_date
+
+
